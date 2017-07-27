@@ -30,6 +30,7 @@ static PyMethodDef BinlogMethods[] = {
     {NULL, NULL, 0, NULL} /* Sentinel */
 };
 
+#if PY_MAJOR_VERSION >= 3
 static PyModuleDef binlogmodule = {
     PyModuleDef_HEAD_INIT,
     "binlog",             /* m_name */
@@ -37,6 +38,7 @@ static PyModuleDef binlogmodule = {
     -1,                   /* m_size */
     BinlogMethods         /* m_methods */
 };
+#endif
 
 static PyObject *version_info(PyObject *dummy, PyObject *args)
 {
@@ -46,11 +48,24 @@ static PyObject *version_info(PyObject *dummy, PyObject *args)
     return PyText_FromString("dummy");
 }
 
-PyMODINIT_FUNC PyInit_binlog(void)
+#if PY_MAJOR_VERSION >= 3
+# define BINLOG_RETURN_NULL return NULL
+  PyMODINIT_FUNC PyInit_binlog(void)
+#else
+# define BINLOG_RETURN_NULL return
+# ifdef __cplusplus
+  extern "C"
+# endif
+  DL_EXPORT(void) initbinlog(void)
+#endif
 {
     PyObject *m, *d;
 
+#if PY_MAJOR_VERSION >= 3
     m = PyModule_Create(&binlogmodule);
+#else
+    m = Py_InitModule3("binlog", BinlogMethods, pybinlog_module_doc);
+#endif
     if (!m) {
         goto error;
     }
@@ -69,10 +84,14 @@ PyMODINIT_FUNC PyInit_binlog(void)
     if (!binlogobject_constants)
         goto error;
 
+#if PY_MAJOR_VERSION >= 3
     return m;
+#else
+    BINLOG_RETURN_NULL;
+#endif
 
 error:
     Py_XDECREF(BinlogError);
     Py_XDECREF(binlogobject_constants);
-    return NULL;
+    BINLOG_RETURN_NULL;
 }
