@@ -21,6 +21,8 @@
 
 #include "pybinlog.h"
 
+PyTypeObject *p_Binlog_Type = NULL;
+
 PyObject *binlogobject_constants = NULL;
 
 static PyObject *BinlogError = NULL;
@@ -40,7 +42,7 @@ static PyModuleDef binlogmodule = {
 };
 #endif
 
-static PyObject *version_info(PyObject *dummy, PyObject *args)
+PyObject *version_info(PyObject *dummy, PyObject *args)
 {
     UNUSED(dummy);
     UNUSED(args);

@@ -42,13 +42,21 @@
 # define UNUSED(x) ((void)x)
 #endif
 
+extern PyTypeObject  Binlog_Type;
+extern PyTypeObject *p_Binlog_Type;
+
 extern PyObject *binlogobject_constants;
+
+typedef struct BinlogObject {
+    PyObject_HEAD
+    PyObject *dict;
+} BinlogObject;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-static PyObject *version_info(PyObject *dummy, PyObject *args);
+PyObject *version_info(PyObject *dummy, PyObject *args);
 
 #ifdef __cplusplus
 }

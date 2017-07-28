@@ -79,6 +79,7 @@ def get_extension(argv):
     sources = [
         os.path.join("src", "pybinlog.cpp"),
         os.path.join("src", "docstring.cpp"),
+        os.path.join("src", "binlog.cpp"),
     ]
     depends = [
         os.path.join("src", "pybinlog.h"),
