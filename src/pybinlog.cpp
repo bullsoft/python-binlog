@@ -50,6 +50,28 @@ PyObject *version_info(PyObject *dummy, PyObject *args)
     return PyText_FromString("dummy");
 }
 
+static int insert_object(PyObject *d, const char *name, PyObject *value)
+{
+    PyObject *key;
+
+    if (!d) {
+        return -1;
+    }
+
+    key = PyText_FromString(name);
+
+    if (PyDict_SetItem(d, key, value) < 0) {
+        goto error;
+    }
+    Py_DECREF(key);
+    Py_DECREF(value);
+    return 0;
+
+error:
+    Py_DECREF(key);
+    return -1;
+}
+
 #if PY_MAJOR_VERSION >= 3
 # define BINLOG_RETURN_NULL return NULL
   PyMODINIT_FUNC PyInit_binlog(void)
@@ -85,6 +107,11 @@ PyObject *version_info(PyObject *dummy, PyObject *args)
     binlogobject_constants = PyDict_New();
     if (!binlogobject_constants)
         goto error;
+
+    p_Binlog_Type = &Binlog_Type;
+    Py_TYPE(&Binlog_Type) = &PyType_Type;
+
+    insert_object(d, "Binlog", (PyObject *)p_Binlog_Type);
 
 #if PY_MAJOR_VERSION >= 3
     return m;
