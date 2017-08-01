@@ -24,6 +24,9 @@
 
 #include <Python.h>
 
+// from mysql-binlog-events
+#include <binlog.h>
+
 #include "docstring.h"
 
 #if (defined(_WIN32) || defined(__WIN32__)) && !defined(WIN32)
@@ -36,6 +39,10 @@
 #else
 # define PyText_FromFormat(format, str) PyString_FromFormat((format), (str))
 # define PyText_FromString(str) PyString_FromString(str)
+#endif
+
+#if PY_MAJOR_VERSION >= 3
+# define PyInt_FromLong PyLong_FromLong
 #endif
 
 #ifndef UNUSED

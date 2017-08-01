@@ -50,7 +50,7 @@ PyObject *version_info(PyObject *dummy, PyObject *args)
     return PyText_FromString("dummy");
 }
 
-static int insert_object(PyObject *d, const char *name, PyObject *value)
+static int insert_obj(PyObject *d, PyObject *extra, const char *name, PyObject *value)
 {
     PyObject *key;
 
@@ -59,10 +59,17 @@ static int insert_object(PyObject *d, const char *name, PyObject *value)
     }
 
     key = PyText_FromString(name);
+    if (!key) {
+        return -1;
+    }
 
     if (PyDict_SetItem(d, key, value) < 0) {
         goto error;
     }
+    if (extra && PyDict_SetItem(extra, key, value) < 0) {
+        goto error;
+    }
+
     Py_DECREF(key);
     Py_DECREF(value);
     return 0;
@@ -71,6 +78,36 @@ error:
     Py_DECREF(key);
     return -1;
 }
+
+static int insert_int(PyObject *d, PyObject *extra, const char *name, long value)
+{
+    PyObject *v = PyInt_FromLong(value);
+
+    if (!v) {
+        return -1;
+    }
+
+    if (insert_obj(d, extra, name, v) < 0) {
+        Py_DECREF(v);
+        return -1;
+    }
+    return 0;
+}
+
+#define insert_obj_helper(d, extra, name, value)     \
+    do {                                             \
+        if (insert_obj(d, extra, name, value) < 0)   \
+            goto error;                              \
+    } while (0)
+
+#define insert_int_helper(d, extra, name, value)     \
+    do {                                             \
+        if (insert_int(d, extra, name, value) < 0)   \
+            goto error;                              \
+    } while (0)
+
+#define define_const(value) \
+    insert_int_helper(d, binlogobject_constants, #value, value)
 
 #if PY_MAJOR_VERSION >= 3
 # define BINLOG_RETURN_NULL return NULL
@@ -111,7 +148,49 @@ error:
     p_Binlog_Type = &Binlog_Type;
     Py_TYPE(&Binlog_Type) = &PyType_Type;
 
-    insert_object(d, "Binlog", (PyObject *)p_Binlog_Type);
+    insert_obj_helper(d, NULL, "Binlog", (PyObject *)p_Binlog_Type);
+
+    {
+        using namespace binary_log;
+        define_const(UNKNOWN_EVENT);
+        define_const(START_EVENT_V3);
+        define_const(QUERY_EVENT);
+        define_const(STOP_EVENT);
+        define_const(ROTATE_EVENT);
+        define_const(INTVAR_EVENT);
+        define_const(LOAD_EVENT);
+        define_const(SLAVE_EVENT);
+        define_const(CREATE_FILE_EVENT);
+        define_const(APPEND_BLOCK_EVENT);
+        define_const(EXEC_LOAD_EVENT);
+        define_const(DELETE_FILE_EVENT);
+        define_const(NEW_LOAD_EVENT);
+        define_const(RAND_EVENT);
+        define_const(USER_VAR_EVENT);
+        define_const(FORMAT_DESCRIPTION_EVENT);
+        define_const(XID_EVENT);
+        define_const(BEGIN_LOAD_QUERY_EVENT);
+        define_const(EXECUTE_LOAD_QUERY_EVENT);
+        define_const(TABLE_MAP_EVENT);
+        define_const(PRE_GA_WRITE_ROWS_EVENT);
+        define_const(PRE_GA_UPDATE_ROWS_EVENT);
+        define_const(PRE_GA_DELETE_ROWS_EVENT);
+        define_const(WRITE_ROWS_EVENT_V1);
+        define_const(UPDATE_ROWS_EVENT_V1);
+        define_const(DELETE_ROWS_EVENT_V1);
+        define_const(INCIDENT_EVENT);
+        define_const(HEARTBEAT_LOG_EVENT);
+        define_const(IGNORABLE_LOG_EVENT);
+        define_const(ROWS_QUERY_LOG_EVENT);
+        define_const(WRITE_ROWS_EVENT);
+        define_const(UPDATE_ROWS_EVENT);
+        define_const(DELETE_ROWS_EVENT);
+        define_const(GTID_LOG_EVENT);
+        define_const(ANONYMOUS_GTID_LOG_EVENT);
+        define_const(PREVIOUS_GTIDS_LOG_EVENT);
+        define_const(TRANSACTION_CONTEXT_EVENT);
+        define_const(VIEW_CHANGE_EVENT);
+    }
 
 #if PY_MAJOR_VERSION >= 3
     return m;
