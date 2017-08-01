@@ -74,6 +74,29 @@ class ExtensionConfiguration(object):
     def __init__(self, argv=[]):
         self.argv = argv
         self.original_argv = argv[:]
+        self.include_dirs = []
+        self.library_dirs = []
+        self.libraries = []
+
+        self.configure()
+
+    def configure_unix(self):
+        MYSQL_BINLOG_EVENTS_DIR = scan_argv(self.argv, "--mysql-binlog-events-dir=")
+        if MYSQL_BINLOG_EVENTS_DIR is not None:
+            self.include_dirs.append(os.path.join(MYSQL_BINLOG_EVENTS_DIR, "include"))
+            self.library_dirs.append(os.path.join(MYSQL_BINLOG_EVENTS_DIR, "lib"))
+
+        # add libraries
+        self.libraries.append('binlogevents')
+        self.libraries.append('mysqlstream')
+
+    def configure_windows(self):
+        pass
+
+    if sys.platform == "win32":
+        configure = configure_windows
+    else:
+        configure = configure_unix
 
 def get_extension(argv):
     sources = [
@@ -90,6 +113,9 @@ def get_extension(argv):
         name=PACKAGE,
         sources=sources,
         depends=depends,
+        include_dirs=ext_config.include_dirs,
+        library_dirs=ext_config.library_dirs,
+        libraries=ext_config.libraries,
     )
     # print(ext.__dict__); sys.exit(1)
     return ext
