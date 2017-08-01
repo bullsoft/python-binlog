@@ -76,6 +76,7 @@ class ExtensionConfiguration(object):
         self.original_argv = argv[:]
         self.include_dirs = []
         self.library_dirs = []
+        self.runtime_library_dirs = []
         self.libraries = []
 
         self.configure()
@@ -83,8 +84,19 @@ class ExtensionConfiguration(object):
     def configure_unix(self):
         MYSQL_BINLOG_EVENTS_DIR = scan_argv(self.argv, "--mysql-binlog-events-dir=")
         if MYSQL_BINLOG_EVENTS_DIR is not None:
-            self.include_dirs.append(os.path.join(MYSQL_BINLOG_EVENTS_DIR, "include"))
+            self.include_dirs.append(os.path.join(MYSQL_BINLOG_EVENTS_DIR, "include", "mysql-binary-log-events"))
             self.library_dirs.append(os.path.join(MYSQL_BINLOG_EVENTS_DIR, "lib"))
+            self.runtime_library_dirs.append(os.path.join(MYSQL_BINLOG_EVENTS_DIR, "lib"))
+
+        MYSQL_SOURCE_DIR = scan_argv(self.argv, "--mysql-source-dir=")
+        if MYSQL_SOURCE_DIR is not None:
+            self.include_dirs.append(os.path.join(MYSQL_SOURCE_DIR, "include"))
+
+        MYSQL_DIR = scan_argv(self.argv, "--mysql-dir=")
+        if MYSQL_DIR is not None:
+            self.include_dirs.append(os.path.join(MYSQL_DIR, "include"))
+            self.library_dirs.append(os.path.join(MYSQL_DIR, "lib"))
+            self.runtime_library_dirs.append(os.path.join(MYSQL_DIR, "lib"))
 
         # add libraries
         self.libraries.append('binlogevents')
@@ -115,6 +127,7 @@ def get_extension(argv):
         depends=depends,
         include_dirs=ext_config.include_dirs,
         library_dirs=ext_config.library_dirs,
+        runtime_library_dirs=ext_config.runtime_library_dirs,
         libraries=ext_config.libraries,
     )
     # print(ext.__dict__); sys.exit(1)
