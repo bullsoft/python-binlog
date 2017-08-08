@@ -106,9 +106,6 @@ static int insert_int(PyObject *d, PyObject *extra, const char *name, long value
             goto error;                              \
     } while (0)
 
-#define define_const(value) \
-    insert_int_helper(d, binlogobject_constants, #value, value)
-
 #if PY_MAJOR_VERSION >= 3
 # define BINLOG_RETURN_NULL return NULL
   PyMODINIT_FUNC PyInit_binlog(void)
@@ -151,6 +148,9 @@ static int insert_int(PyObject *d, PyObject *extra, const char *name, long value
     insert_obj_helper(d, NULL, "Binlog", (PyObject *)p_Binlog_Type);
 
     {
+        #define define_const(value) \
+            insert_int_helper(d, binlogobject_constants, #value, value)
+
         using namespace binary_log;
         define_const(UNKNOWN_EVENT);
         define_const(START_EVENT_V3);
@@ -190,6 +190,8 @@ static int insert_int(PyObject *d, PyObject *extra, const char *name, long value
         define_const(PREVIOUS_GTIDS_LOG_EVENT);
         define_const(TRANSACTION_CONTEXT_EVENT);
         define_const(VIEW_CHANGE_EVENT);
+
+        #undef define_const
     }
 
 #if PY_MAJOR_VERSION >= 3
